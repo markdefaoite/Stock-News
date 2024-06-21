@@ -1,8 +1,42 @@
+import requests
+from datetime import datetime, timedelta, date
+
 STOCK = "TSLA"
 COMPANY_NAME = "Tesla Inc"
 
 STOCK_ENDPOINT = "https://www.alphavantage.co/query"
 NEWS_ENDPOINT = "https://newsapi.org/v2/everything"
+
+AlphaVantage_api = "XBYW8H89B0WEAJSN"
+
+stock_params = {
+    "function": "TIME_SERIES_DAILY",
+    "symbol": STOCK,
+    "outputsize": "compact",
+    "apikey": AlphaVantage_api
+}
+
+response = requests.get(STOCK_ENDPOINT, params=stock_params)
+response.raise_for_status()
+data = response.json()
+stock_data = data["Time Series (Daily)"]
+
+yesterday = list(stock_data.keys())[0]
+day_before_yesterday = list(stock_data.keys())[1]
+print(f"Close on {yesterday}: {stock_data[yesterday]["4. close"]}")
+print(f"Close on {day_before_yesterday}: {stock_data[day_before_yesterday]["4. close"]}")
+
+yesterday_close = float(stock_data[yesterday]["4. close"])
+day_before_yesterday_close = float(stock_data[day_before_yesterday]["4. close"])
+
+lower_buffer = day_before_yesterday_close *0.95
+upper_buffer = day_before_yesterday_close *1.05
+
+if yesterday_close > upper_buffer or yesterday_close < lower_buffer:
+    print("Get News")
+else:
+    print("No News")
+
 
 
 ## STEP 1: Use https://newsapi.org/docs/endpoints/everything

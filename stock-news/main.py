@@ -7,56 +7,77 @@ COMPANY_NAME = "Tesla Inc"
 STOCK_ENDPOINT = "https://www.alphavantage.co/query"
 NEWS_ENDPOINT = "https://newsapi.org/v2/everything"
 
+
+## STEP 1: Use https://newsapi.org/docs/endpoints/everything
+# When STOCK price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
+#HINT 1: Get the closing price for yesterday and the day before yesterday. Find the positive difference between the two prices. e.g. 40 - 20 = -20, but the positive difference is 20.
+#HINT 2: Work out the value of 5% of yerstday's closing stock price. AlphaVantage_api = "XBYW8H89B0WEAJSN"
+
+
 AlphaVantage_api = "XBYW8H89B0WEAJSN"
+news_api = "0a55c05c38d64083a119e3d7ca45879f"
+
 
 stock_params = {
     "function": "TIME_SERIES_DAILY",
     "symbol": STOCK,
-    "outputsize": "compact",
     "apikey": AlphaVantage_api
 }
 
 response = requests.get(STOCK_ENDPOINT, params=stock_params)
 response.raise_for_status()
-data = response.json()
-stock_data = data["Time Series (Daily)"]
+data = response.json()["Time Series (Daily)"]
+data_list = [value for (key, value) in data.items()]
+yesterday_data = data_list[0]
+yesterday_closing_price = yesterday_data["4. close"]
+print(yesterday_closing_price)
 
-yesterday = list(stock_data.keys())[0]
-day_before_yesterday = list(stock_data.keys())[1]
-print(f"Close on {yesterday}: {stock_data[yesterday]["4. close"]}")
-print(f"Close on {day_before_yesterday}: {stock_data[day_before_yesterday]["4. close"]}")
+day_before_yesterday_data = data_list[1]
+day_before_yesterday_closing_price = day_before_yesterday_data["4. close"]
+print(day_before_yesterday_closing_price)
 
-yesterday_close = float(stock_data[yesterday]["4. close"])
-day_before_yesterday_close = float(stock_data[day_before_yesterday]["4. close"])
+difference = abs(float(yesterday_closing_price) - float(day_before_yesterday_closing_price))
 
-lower_buffer = day_before_yesterday_close *0.95
-upper_buffer = day_before_yesterday_close *1.05
+diff_percent =(difference / float(yesterday_closing_price)) * 100
 
-if yesterday_close > upper_buffer or yesterday_close < lower_buffer:
+if diff_percent > 5:
     print("Get News")
-else:
-    print("No News")
-
-
-
-## STEP 1: Use https://newsapi.org/docs/endpoints/everything
-# When STOCK price increase/decreases by 5% between yesterday and the day before yesterday then print("Get News").
-#HINT 1: Get the closing price for yesterday and the day before yesterday. Find the positive difference between the two prices. e.g. 40 - 20 = -20, but the positive difference is 20.
-#HINT 2: Work out the value of 5% of yerstday's closing stock price. 
-
 
 
 ## STEP 2: Use https://newsapi.org/docs/endpoints/everything
 # Instead of printing ("Get News"), actually fetch the first 3 articles for the COMPANY_NAME. 
 #HINT 1: Think about using the Python Slice Operator
 
+#https://newsapi.org/v2/everything?q=tesla&from=2024-05-21&sortBy=publishedAt&apiKey=API_KEY
+
+news_params = {
+    "qInTitle": COMPANY_NAME,
+    "apiKey": news_api,
+}
+
+response = requests.get(NEWS_ENDPOINT, params=news_params)
+articles = response.json()["articles"]
+
+three_articles = articles[:3]
+print(three_articles)
 
 
-## STEP 3: Use twilio.com/docs/sms/quickstart/python
-# Send a separate message with each article's title and description to your phone number. 
-#HINT 1: Consider using a List Comprehension.
-
-
+#
+# news_params = {
+#     "q": COMPANY_NAME,
+#     "from": yesterday,
+#     "sortBy": "popularity",
+#     "apiKey": news_api,
+# }
+#
+# ## STEP 3: Use twilio.com/docs/sms/quickstart/python
+# # Send a separate message with each article's title and description to your phone number.
+# #HINT 1: Consider using a List Comprehension.
+#
+# response = requests.get(NEWS_ENDPOINT, params=news_params)
+# response.raise_for_status()
+# data = response.json()
+# print(data)
 
 #Optional: Format the SMS message like this: 
 """
